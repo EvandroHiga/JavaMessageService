@@ -1,26 +1,21 @@
-package br.com.jms.consumer;
-
-import java.util.Scanner;
+package br.com.jms.producer;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 import javax.naming.InitialContext;
 
-public class Consumer {
+public class Producer {
+
 	public static void main(String[] args) throws Exception {
 		InitialContext initialContext = new InitialContext();
 		ConnectionFactory connectionFactory = (ConnectionFactory) initialContext.lookup("ConnectionFactory");
 		Connection connection = connectionFactory.createConnection();
 		connection.start();
 		
-		System.out.println("### Consumer: conexao estabelecida ###");
+		System.out.println("### Producer: conexao estabelecida ###");
 		
 		Destination fila = (Destination) initialContext.lookup("FilaTestDestination");
 		
@@ -29,27 +24,14 @@ public class Consumer {
 		 * Session.AUTO_ACKNOWLEDGE: confirmacao automatica do recebimento da msg JMS
 		 */
 		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-		MessageConsumer msgConsumer = session.createConsumer(fila);
+		MessageProducer msgProducer = session.createProducer(fila);
 		
-		msgConsumer.setMessageListener(new MessageListener() {
-			@Override
-			public void onMessage(Message message) {
-				TextMessage textMessage = (TextMessage) message;
-				try {
-					System.out.println("[ " + textMessage.getText() + " ]");
-					System.out.println("### pressione qualquer tecla para encerrar ###");
-				} catch (JMSException e) {
-					e.printStackTrace();
-				}
-							
-			}
-			
-		});
-		
-		System.out.println("### message listener funcionando ###");
-		new Scanner(System.in).nextLine();
+		for(int i=0; i<=1000; i++) {
+			msgProducer.send(session.createTextMessage("<pedido><id> " + i + " </id></pedido>"));
+		}
 		
 		connection.close();
 		initialContext.close();
 	}
+
 }
